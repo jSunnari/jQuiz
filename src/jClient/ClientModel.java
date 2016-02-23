@@ -32,7 +32,6 @@ public class ClientModel implements Runnable{
     private boolean sendMessage = false;
 
 
-
     //run-method for client(setting up input and output, start receiving messages:--------------------------------------
     @Override
     public void run() {
@@ -45,7 +44,7 @@ public class ClientModel implements Runnable{
                     host = host.substring(1);
                 }
 
-                //ClientView.chatTextArea.appendText("You connected to host: " + host + "\n\n");
+                ClientView.appendGreen("You connected to host: " + host + "\n\n");
 
 
                 input = new Scanner(socket.getInputStream());
@@ -80,8 +79,12 @@ public class ClientModel implements Runnable{
         }
         catch(Exception e)
         {
-            System.out.println("Server is not responding.");
             e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("jQuiz");
+            alert.setHeaderText(null);
+            alert.setContentText("Server is not responding.");
+            alert.showAndWait();
         }
     }
 
@@ -159,17 +162,14 @@ public class ClientModel implements Runnable{
 
                 //This is a command that comes with a username:
                 if(message.startsWith("/_USERNAME")) {
-                    System.out.println("allt: " +  message);
 
                     //Remove /_USERNAME and [], split with commas, fill array:
                     String user = message.substring(11);
                     user = user.replace("[", "");
                     user = user.replace("]", "");
-                    System.out.println("efter " + user);
 
                     userList = FXCollections.observableArrayList(user.split(", "));
 
-                    System.out.println("listan: " + userList);
 
                     //Send list to Listview (Online users): - Platform.runlater prevents thread-collision:
                     Platform.runLater(new Runnable() {
@@ -183,15 +183,19 @@ public class ClientModel implements Runnable{
                 //This is a command that tells if the username already exists:
                 else if (message.startsWith("/_EXISTS")){
 
-                    //Send a message and change the username:
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("jQuiz");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Username already exists, changing your username..");
-                    alert.showAndWait();
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            //Send a message and change the username:
+                            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                            alert.setTitle("jQuiz");
+                            alert.setHeaderText(null);
+                            alert.setContentText("Username already exists, changing your username..");
+                            alert.showAndWait();
+                        }
+                    });
 
-                    String newUser = message.substring(10);
-                    userName = newUser;
+                    userName = message.substring(8);
                 }
 
                 //This is a command that tells if the server disconnects:
@@ -253,7 +257,7 @@ public class ClientModel implements Runnable{
 
     //Send message-method (Streams out message)-------------------------------------------------------------------------
     public void send (String message) {
-        if (message.equals("!startQuiz")){
+        if (message.equals("!startQuiz") || message.equals("!getScores")){
             output.println(message + userName);
         }
         else {

@@ -12,6 +12,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
@@ -52,9 +53,6 @@ public class ClientView {
         window.setTitle("jQuiz");
 
 
-        textFlowArea.setStyle("-fx-background-color: white;");
-        textFlowArea.setPrefHeight(400);
-        textFlowArea.setPrefWidth(538);
 
 
         textFlowArea.getChildren().addListener(
@@ -66,6 +64,12 @@ public class ClientView {
                 }));
         textContainer.setContent(textFlowArea);
 
+        usernameTextfield.setOnMouseClicked(event -> usernameTextfield.setStyle("-fx-control-inner-background: white"));
+        ipTextfield.setOnMouseClicked(event -> ipTextfield.setStyle("-fx-control-inner-background: white"));
+        portTextfield.setOnMouseClicked(event -> portTextfield.setStyle("-fx-control-inner-background: white"));
+
+
+
 
         //build window:
         buildWindow();
@@ -73,8 +77,11 @@ public class ClientView {
 
 
 
+
         //set scene:
         Scene scene = new Scene(mainPane, 800, 600);
+        scene.getStylesheets().add("https://fonts.googleapis.com/css?family=Lato:400,700");
+        scene.getStylesheets().add("jQuizStylesheet.css");
         window.setScene(scene);
         window.show();
     }
@@ -94,7 +101,7 @@ public class ClientView {
         portTextfield.setPromptText("50123");
         usernameTextfield.setMaxWidth(120);
         spring1.setMinWidth(10);
-        spring2.setMinWidth(40);
+        spring2.setMinWidth(50);
 
         GridPane.setConstraints(usernameLabel,0,0);
         GridPane.setConstraints(usernameTextfield,1,0);
@@ -121,18 +128,21 @@ public class ClientView {
         chatTextBox.setPadding(new Insets(10,10,10,10));
         chatTextBox.setAlignment(Pos.CENTER);
         chatTextBox.getChildren().addAll(chatTextLabel, textContainer);
-        chatTextArea.setPrefHeight(400);
-        chatTextArea.setEditable(false);
-        chatTextArea.setWrapText(true);
+        textFlowArea.setStyle("-fx-background-color: white; -fx-font-size: 14px;");
+        textFlowArea.setPrefHeight(400);
+        textFlowArea.setPrefWidth(560);
+
+
 
         //BOTTOM PANEL, MESSAGE AREA:
-        HBox messageBox = new HBox(55);
+        HBox messageBox = new HBox(10);
         messageBox.setPadding(new Insets(10,10,10,10));
         messageBox.getChildren().addAll(messageTextArea,sendButton);
         messageTextArea.setPrefHeight(60);
+        messageTextArea.setPrefWidth(506);
         messageTextArea.setWrapText(true);
+        messageTextArea.setStyle("-fx-background-radius: 5px");
         sendButton.setPrefHeight(60);
-        sendButton.setPrefWidth(188);
 
         //INIT MAIN PANEL:
         mainPane = new BorderPane();
@@ -144,7 +154,7 @@ public class ClientView {
     }
 
     public static void appendOrangeBold(String msg){
-        append(msg, "-fx-font-weight: bold; -fx-fill: orange;");
+        append(msg, "-fx-font-weight: 700; -fx-fill: #d58300;");
     }
 
     public static void appendRed(String msg){
@@ -160,7 +170,7 @@ public class ClientView {
     }
 
     public static void appendPurpleBold(String msg){
-        append(msg, "-fx-fill: purple; -fx-font-weight: bold;");
+        append(msg, "-fx-fill: purple;");
     }
 
     public static void appendRegular(String msg){
@@ -177,7 +187,6 @@ public class ClientView {
             textFlowArea.getChildren().add(t);
         });
     }
-
 
 
 
@@ -211,6 +220,42 @@ public class ClientView {
 
     public void setUserListView(ListView<String> listView){
         userList = listView;
+    }
+
+    public void initConnected(){
+        connectButton.setDisable(true);
+        usernameTextfield.setDisable(true);
+        ipTextfield.setDisable(true);
+        portTextfield.setDisable(true);
+
+    }
+
+    public boolean emptyFields(){
+        boolean readyToConnect;
+
+        String backgroundColor = "-fx-control-inner-background: red";
+
+        if (usernameTextfield.getText().equals("")){
+            usernameTextfield.setStyle(backgroundColor);
+            readyToConnect = false;
+        }
+
+        else if (ipTextfield.getText().equals("")){
+            ipTextfield.setStyle(backgroundColor);
+            readyToConnect = false;
+        }
+
+        else if (portTextfield.getText().equals("")){
+            portTextfield.setStyle(backgroundColor);
+            readyToConnect = false;
+        }
+
+        else {
+            readyToConnect = true;
+        }
+
+        return readyToConnect;
+
     }
 
 

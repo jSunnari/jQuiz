@@ -19,16 +19,25 @@ public class ClientController extends Application {
         model = new ClientModel();
 
         view.connectButtonListener(event -> {
-            model.setUserName(view.getUsername());
-            model.connect(view.getPort(),view.getIp());
-            Thread clientThread = new Thread(model);
-            clientThread.start();
+
+            if (view.emptyFields()) {
 
 
+                model.setUserName(view.getUsername());
+                model.connect(view.getPort(), view.getIp());
+
+                //if the connection goes well:
+                if (model.getConnected()) {
+
+                    Thread clientThread = new Thread(model);
+                    clientThread.start();
+
+                    view.initConnected();
+                }
+            }
 
             //TEST
 
-            view.setUserList(model.getUserList());
 
 
         });
@@ -51,9 +60,11 @@ public class ClientController extends Application {
 
 
         //Shutdown-hook, closes the application and socket properly when closing the window.
-        primaryStage.setOnCloseRequest(event -> {
-           model.shutDownDisconnect();
-        });
+        if (model.getConnected()) {
+            primaryStage.setOnCloseRequest(event -> {
+                model.shutDownDisconnect();
+            });
+        }
 
 
 
@@ -63,7 +74,7 @@ public class ClientController extends Application {
 
 
     void sendButton(){
-        if (model.getConnected()) {
+        if (model.getConnected() && !view.getMessageTextArea().equals("")) {
             model.send(view.getMessageTextArea());
             view.setMessageTextArea();
         }
