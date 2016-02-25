@@ -39,9 +39,10 @@ import java.util.*;
 public class Server implements Runnable {
 
     //Arraylists holding connections and users:
-    public static ArrayList<Socket> connectionArray = new ArrayList<>();
     private static ObservableList<String> currentUsers = FXCollections.observableArrayList();
     private static ArrayList<Integer> scoreList = new ArrayList<>();
+    private static ArrayList<Integer> winningStreaks = new ArrayList<>();
+    public static ArrayList<Socket> connectionArray = new ArrayList<>();
 
     //Counter for usernames that has the same name (making them unique).
     private int counter = 1;
@@ -50,22 +51,24 @@ public class Server implements Runnable {
     private DateFormat df = new SimpleDateFormat("HH:mm");
     private Date dateObj = new Date();
 
+    //variable for the socket.
+    private Socket socket;
 
     //static Quiz-variables (communicates with the "ServerCommunication"-class):
-    private static String answer; // string that is holding the current answer.
-    private static int questionNumber = 0; //int for holding which the current question is.
+    private static String answer; //string that is holding the current answer.
+    private static Timeline timeline; //the timer for the questions.
     private static ArrayList<String> questionList; //arraylist for all questions.
     private static ArrayList<Integer> randomNumbers = new ArrayList<>(); //arraylist holding randomnumbers.
     private static boolean questionAnswered; //boolean which knows if a questions is answered or not.
-    private static Timeline timeline;
-    private static boolean quizIsOn;
+    private static boolean quizIsOn; //boolean which know if the quiz is on or off.
+    private static int questionNumber = 0; //int for holding which the current question is.
 
     /**
      * Run method for server: ******************************************************************************************
      */
     public void run () {
         try {
-            //Setting up a serversocket that listens to port, waiting for clients:
+            //Setting up a serversocket that listens to port 50123, waiting for clients:
             int port = 50123;
             ServerSocket serverSocket = new ServerSocket(port);
 
@@ -78,7 +81,7 @@ public class Server implements Runnable {
             //While listening for new clients to join:
             while (true) {
                 //Saves the connection into a socket, also save the socket in the arraylist:
-                Socket socket = serverSocket.accept();
+                socket = serverSocket.accept();
                 connectionArray.add(socket);
                 //Add username to socket with the method addUserName:
                 addUserName(socket);
@@ -107,13 +110,7 @@ public class Server implements Runnable {
             if (!currentUsers.contains(userName)) {
                 currentUsers.add(userName);
                 scoreList.add(currentUsers.indexOf(userName),0);
-                //TEST
-
-                for (int i = 0; i < scoreList.size(); i++) {
-                    System.out.println(scoreList.get(i));
-                }
-
-
+                winningStreaks.add(currentUsers.indexOf(userName),0);
             }
 
             //If username already exists, change to alternative unique name.
@@ -122,6 +119,7 @@ public class Server implements Runnable {
                 String newUserName = userName + "(" + counter + ")";
                 currentUsers.add(newUserName);
                 scoreList.add(currentUsers.indexOf(userName),0);
+                winningStreaks.add(currentUsers.indexOf(userName),0);
                 userName = newUserName;
                 PrintWriter out = new PrintWriter(x.getOutputStream());
                 out.println("/_EXISTS" + newUserName);
@@ -162,6 +160,7 @@ public class Server implements Runnable {
     public static void removeUser(String userName) {
         userName = userName.substring(0, userName.length()-18);
         scoreList.remove(currentUsers.indexOf(userName));
+        winningStreaks.remove(currentUsers.indexOf(userName));
         currentUsers.remove(userName);
     }
 
@@ -183,46 +182,40 @@ public class Server implements Runnable {
 
     /**
      * Method for sending jQuiz-bot-messages. **************************************************************************
+     * If ServerCommunication sends "RIGHTMESSAGE", a client has answered a question right.
+     * If ServerCommunication sends "!getScores", a client asks for the scorelist.
+     * Else, it's a normal message for the bot to send.
      * @param message = message incomming from the "ServerCommunication"-class.
      */
     public static void sendBotMessage(String message){
 
-        //Flag which says that the question has been answered. Changes the boolean.
+        //Flag which says that the question has been answered:
         if (message.startsWith("RIGHTANSWER")){
-            questionAnswered = true;
 
-            String winningUser = message.substring(19);
+            questionAnswered = true; //the question has now been answered.
+            String winningUser = message.substring(19); //this is the user who guessed right.
+            int indexOfWinningUser = currentUsers.indexOf(winningUser); //this is the index of the user.
+            scoreList.set(indexOfWinningUser,scoreList.get(indexOfWinningUser)+1); //add 1 score the to winning user.
+            double answeredTime = timeline.getCurrentTime().toSeconds(); //the time the user answered in.
 
-            System.out.println("namn: " + winningUser);
-
-            int indexOfWinningUser = currentUsers.indexOf(winningUser);
-
-            System.out.println("index: " + indexOfWinningUser);
-
-            scoreList.set(indexOfWinningUser,scoreList.get(indexOfWinningUser)+1);
-
-            for (int i = 0; i < scoreList.size() ; i++) {
-                System.out.println(scoreList.get(i));
-
-            }
-
-            double answeredTime = timeline.getCurrentTime().toSeconds();
+            //Send a message with information about the winning user.
             message = message.substring(11) + " - Time: " + (double)Math.round(answeredTime * 100d) / 100d + "sec - " +
                     "Points: " + scoreList.get(indexOfWinningUser);
 
-
-
-
             System.out.println(message);
+
+            //Skip to 14sec. so that the next question starts in 1sec.
+            timeline.jumpTo(Duration.millis(14000));
         }
 
+        //loops through "winningstreaks"-list and shows how many times a user has won a match.
         else if (message.startsWith("!getScores")){
             for (int i = 0; i < currentUsers.size(); i++) {
-                sendBotMessage(currentUsers.get(i) + " - " + scoreList.get(i) + "Points");
+                sendBotMessage(currentUsers.get(i) + " - Won matches: " + winningStreaks.get(i));
             }
         }
 
-        //Sends out a regular bot-message to all clients (except if its a call for getting scores):
+        //Sends a bot-message to all clients:
         if (!message.startsWith("!getScores")) {
             try {
                 for (Socket tempSock : connectionArray) {
@@ -257,7 +250,7 @@ public class Server implements Runnable {
         }
 
         //Fill the randomNumbers-arraylist with as many random numbers that there is questions. All unique numbers.
-        while (randomNumbers.size() < questionList.size()/2){
+        while (randomNumbers.size() < 10){
             int rndNmr = rndNumber();
             if (!randomNumbers.contains(rndNmr)) {
                 randomNumbers.add(rndNmr);
@@ -286,7 +279,7 @@ public class Server implements Runnable {
 
     /**
      * Method that works as a timer for the questions. *****************************************************************
-     * If the boolean "questionsAnswered" is false, the bot will give the correct answer.
+     * If the boolean "questionsAnswered" is false, the bot will give the correct answer after 15sec.
      * If the current question-number is lower than the amount of questions there is,
      * ask a new question and increase the value the current question-number.
      * Else if the questionnumber is going to set the arraylist of index out of bounce,
@@ -294,7 +287,7 @@ public class Server implements Runnable {
      */
     public static void timeTicker(){
         timeline = new Timeline(new KeyFrame(
-                Duration.millis(4000),
+                Duration.millis(15000),
                 ae -> {
                     if (!questionAnswered) {
                         sendBotMessage("Times up, the right answer was " + answer);
@@ -309,17 +302,22 @@ public class Server implements Runnable {
                         System.out.println(winnerIndex);
 
                         sendBotMessage("End of game. Winner with " + Collections.max(scoreList) + " points: " + currentUsers.get(winnerIndex));
+                        winningStreaks.set(winnerIndex,winningStreaks.get(winnerIndex)+1);
                         quizIsOn = false;
                         questionNumber = 0;
                         randomNumbers.clear();
+                        //Sets all of scorelist indexes to 0 ( I want to keep all indexes therefor not clear(); ).
+                        for (int i = 0; i < scoreList.size(); i++) {
+                            scoreList.set(i,0);
+                        }
                     }
                 }));
-        timeline.play();
 
+        timeline.play(); //start timer.
     }
 
     /**
-     * Method for generating only even randomNumbers. ******************************************************************
+     * Method for generating only even randomNumbers (between 0 and amount of questions. *******************************
      * @return = even random numbers for the randomNumber-arraylist.
      */
     public static int rndNumber(){
@@ -347,16 +345,14 @@ public class Server implements Runnable {
     }
 
     /**
-     * Method for catching the current answer of a question (used in ServerCommunication-class): ***********************
-     * @return = answer for the current question, as a string.
+     * @return = answer for the current question, as a string. *********************************************************
      */
     public static String getAnswer(){
         return answer;
     }
 
     /**
-     * Method for knowing if the quiz is on: ***************************************************************************
-     * @return = true/false if the quiz is going on right now.
+     * @return = true/false if the quiz is going on right now. *********************************************************
      */
     public static boolean getQuizIsOn(){
         return quizIsOn;

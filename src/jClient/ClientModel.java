@@ -29,8 +29,11 @@ public class ClientModel implements Runnable{
     private ObservableList<String> userList = FXCollections.observableArrayList();
     private ListView<String> userListView = new ListView<>(userList);
     private String message;
-    private boolean sendMessage = false;
+    private MessageInterface messageInterface;
 
+    public ClientModel(MessageInterface messageInterface) {
+        this.messageInterface = messageInterface;
+    }
 
     //run-method for client(setting up input and output, start receiving messages:--------------------------------------
     @Override
@@ -44,8 +47,8 @@ public class ClientModel implements Runnable{
                     host = host.substring(1);
                 }
 
-                ClientView.appendGreen("You connected to host: " + host + "\n\n");
-
+                message = "You connected to host: " + host + "\n";
+                messageInterface.appendRegular();
 
                 input = new Scanner(socket.getInputStream());
                 output = new PrintWriter(socket.getOutputStream());
@@ -170,14 +173,8 @@ public class ClientModel implements Runnable{
 
                     userList = FXCollections.observableArrayList(user.split(", "));
 
-
                     //Send list to Listview (Online users): - Platform.runlater prevents thread-collision:
-                    Platform.runLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            ClientView.userList.setItems(userList);
-                        }
-                    });
+                    Platform.runLater(() -> messageInterface.sendUserList());
                 }
 
                 //This is a command that tells if the username already exists:
@@ -204,23 +201,26 @@ public class ClientModel implements Runnable{
                 }
                 else if(message.startsWith("/_CONNECT")){
                     message = message.substring(9);
-                    ClientView.appendGreen(message + "\n");
+                    messageInterface.appendGreen();
                 }
 
                 else if(message.startsWith("/_BOT")){
 
                     if(message.startsWith("/_BOTQUESTION")){
-                        message = message.substring(13);
-                        ClientView.appendOrangeBold("[jQuiz] " + message + "\n");
+                        message =  "[jQuiz] " + message.substring(13);
+                       // ClientView.appendOrangeBold("[jQuiz] " + message + "\n");
+                        messageInterface.appendOrangeBold();
                     }
                     else {
-                        message = message.substring(5);
-                        ClientView.appendPurpleBold("[jQuiz] " + message + "\n");
+                        message = "[jQuiz] " + message.substring(5);
+                        //ClientView.appendPurpleBold("[jQuiz] " + message + "\n");
+                        messageInterface.appendPurpleBold();
                     }
                 }
 
                 else if(message.startsWith("Welcome")){
-                    ClientView.appendBlue(message + "\n");
+                    //ClientView.appendBlue(message + "\n");
+                    messageInterface.appendBlue();
                 }
 
 
@@ -233,15 +233,15 @@ public class ClientModel implements Runnable{
                     //If it's a chatmessage:
                     if (message.startsWith("[")) {
 
-                        ClientView.appendRegular(message + "\n");
+                        //ClientView.appendRegular(message + "\n");
+                        messageInterface.appendRegular();
 
 
                     }
                     //If message is a "Client has disconnected"-message:
                     else {
-                        System.out.println("else " + message);
 
-                        ClientView.appendRed(message + "\n");
+                        messageInterface.appendRed();
 
 
 
@@ -297,7 +297,7 @@ public class ClientModel implements Runnable{
         return message;
     }
 
-    public ObservableList<String> getUserList(){
+    public ObservableList<String> getCurrentUsers(){
         return userList;
     }
 

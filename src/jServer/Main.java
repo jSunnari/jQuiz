@@ -12,7 +12,6 @@ public class Main extends Application{
         starter.start();
     }
 
-
     public static void main(String[] args) {Application.launch(args);
     }
 }

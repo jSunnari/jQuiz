@@ -8,7 +8,7 @@ import javafx.stage.Stage;
  * Created by Jonas on 2016-02-17.
  */
 
-public class ClientController extends Application {
+public class ClientController extends Application implements MessageInterface {
     ClientView view;
     ClientModel model;
 
@@ -16,12 +16,17 @@ public class ClientController extends Application {
     public void start(Stage primaryStage) throws Exception {
 
         view = new ClientView(primaryStage);
-        model = new ClientModel();
+        model = new ClientModel(this);
 
+        /**
+         * CONNECT-BUTTON.
+         * If any of the textfields are empty, they will be marked red.
+         * Else, the client will try to connect.
+         * If the connection goes well, the thread will start listening for messages and the GUI-window will initialize.
+         */
         view.connectButtonListener(event -> {
 
             if (view.emptyFields()) {
-
 
                 model.setUserName(view.getUsername());
                 model.connect(view.getPort(), view.getIp());
@@ -35,56 +40,90 @@ public class ClientController extends Application {
                     view.initConnected();
                 }
             }
-
-            //TEST
-
-
-
         });
 
-        view.sendButtonListener(event -> sendButton());
-
+        /**
+         * DISCONNECT-BUTTON.
+         * Calls the disconnect-method in the model-class.
+         */
         view.disconnectButtonListener(event -> {
             model.disconnect();
         });
 
+        /**
+         * You can use the Enter-button instead of clicking the send-button when sending messages.
+         */
         view.messageTextAreaListener(event -> {
             if (event.getCode() == KeyCode.ENTER){
                 sendButton();
                 event.consume();
             }
         });
+        /**
+         * But you can still use the send-button :)
+         */
+        view.sendButtonListener(event -> sendButton());
 
-
-
-
-
-        //Shutdown-hook, closes the application and socket properly when closing the window.
+        /**
+         * Shutdown-hook, closes the application and socket properly when closing the window. (if connected).
+         */
         if (model.getConnected()) {
             primaryStage.setOnCloseRequest(event -> {
                 model.shutDownDisconnect();
             });
         }
-
-
-
-
     }
 
-
-
+    /**
+     * Method for sending a message. (if connected and if there is something to send).
+     */
     void sendButton(){
         if (model.getConnected() && !view.getMessageTextArea().equals("")) {
             model.send(view.getMessageTextArea());
-            view.setMessageTextArea();
+            view.clearMessageTextArea();
         }
     }
 
-
-
-
-
+    /**
+     * Main method with all the implemented methods from the interface MessageInterface.
+     * Appends the TextFlow in the viewclass with the the message-text from the modelclass.
+     */
     public static void main(String[] args) {
         Application.launch(args);
+    }
+
+    @Override
+    public void appendOrangeBold() {
+        view.appendOrangeBold(model.getMessage());
+    }
+
+    @Override
+    public void appendRed() {
+        view.appendRed(model.getMessage());
+    }
+
+    @Override
+    public void appendGreen() {
+        view.appendGreen(model.getMessage());
+    }
+
+    @Override
+    public void appendBlue() {
+        view.appendBlue(model.getMessage());
+    }
+
+    @Override
+    public void appendPurpleBold() {
+        view.appendPurpleBold(model.getMessage());
+    }
+
+    @Override
+    public void appendRegular() {
+        view.appendRegular(model.getMessage());
+    }
+
+    @Override
+    public void sendUserList() {
+        view.setUserList(model.getCurrentUsers());
     }
 }

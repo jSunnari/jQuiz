@@ -1,6 +1,5 @@
 package jServer;
 
-import javax.print.attribute.standard.Severity;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.text.DateFormat;
@@ -81,7 +80,6 @@ public class ServerCommunication implements Runnable {
                 if (!message.startsWith("!startQuiz") && !message.startsWith("!getScores")) {
                     System.out.println(message + "\n");
                     for (int i = 0; i < Server.connectionArray.size(); i++) {
-                        System.out.println("test är jag här?");
                         Socket tempSock = Server.connectionArray.get(i);
                         PrintWriter tempOut = new PrintWriter(tempSock.getOutputStream());
                         tempOut.println(message);

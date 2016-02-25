@@ -12,13 +12,14 @@
 }
 
 .button{
-
 }
 
 .list-view{
     -fx-font-size: 15px;
+    -fx-background-radius: 5px;
 }
 
 .text-area{
     -fx-font-size: 15px;
 }
+

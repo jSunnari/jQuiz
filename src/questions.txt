@@ -1,7 +1,7 @@
 Hur många bultar finns det i Ölandsbron?,7428954
-Vilken stad är Polens huvudstad?,Warszawa
-Vilken stad är Tunisiens huvudstad?,Tunis
-Vilken stad är Thailands huvudstad?,Bangkok
+Vad heter Polens huvudstad?,Warszawa
+Vad heter Tunisiens huvudstad?,Tunis
+Vad heter Thailands huvudstad?,Bangkok
 Vilket år mördades Olof Palme?,1986
 Hur många år har man varit gift om man firar diamantbröllop?,60
 Hur många poäng får ett lag som gör 'touchdown' i amerikansk fotboll?,6
@@ -15,4 +15,16 @@ Vem har kallats Stockholms grundare?,Birger Jarl
 Göteborg brändes till grunden år 1611 - av vilket land?,Danmark
 Vad kallas Helsingborgs centralstation?,Knutpunkten
 Zlatan Ibrahimovic växte upp i Malmö. I vilken stadsdel?,Rosengård
-Här utspelar sig Henning Mankells böcker om kriminalkommissarie Kurt Wallander?,Ystad
+Var utspelar sig Henning Mankells böcker om kriminalkommissarie Kurt Wallander?,Ystad
+Vad heter världens högsta vattenfall?,Angelfalls
+Vilket är kroppens största organ?,Huden
+Vad kallas den berömda fighten mellan Muhammad Ali och George Foreman?,Rumble in the jungle
+Vilken är Sveriges största kommun (till ytan)?,Kiruna
+Vad heter Brasiliens huvudstad?,Brasilia
+Vad kallas invånarna i Moskva?,Moskoviter
+Vad heter huvudstaden i den amerikanska delstaten Florida?,Tallahassee
+I vilket land är Hanoi huvudstad?,Vietnam
+I vilket land ligger Kilimanjaro Afrikas högsta berg?,Tanzania
+I vilket land ligger staden Antwerpen?,Belgien
+Vad används i tillverkningen av brännvinet Calvados?,Äpplen
+Vilken musikgrupp har gjort ledmotivet till TV-serien Vänner?,The Rembrandts
