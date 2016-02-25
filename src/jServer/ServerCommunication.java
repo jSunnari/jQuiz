@@ -78,7 +78,7 @@ public class ServerCommunication implements Runnable {
                 //Send the message to the server(console):
                 //Echo out the message to every client in the connectionarray:
                 if (!message.startsWith("!startQuiz") && !message.startsWith("!getScores")) {
-                    System.out.println(message + "\n");
+                    ServerView.appendText(message);
                     for (int i = 0; i < Server.connectionArray.size(); i++) {
                         Socket tempSock = Server.connectionArray.get(i);
                         PrintWriter tempOut = new PrintWriter(tempSock.getOutputStream());

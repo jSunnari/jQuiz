@@ -273,8 +273,6 @@ public class ClientView {
 
     void messageTextAreaListener (EventHandler<KeyEvent> keyListener){
         messageTextArea.setOnKeyPressed(keyListener);
-
-
     }
 
     void guiListeners(){

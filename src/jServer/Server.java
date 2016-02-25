@@ -3,6 +3,7 @@ package jServer;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.util.Duration;
 import java.io.BufferedReader;
@@ -73,10 +74,10 @@ public class Server implements Runnable {
             ServerSocket serverSocket = new ServerSocket(port);
 
             //Information will be shown in serverwindow:
-            System.out.println("Loopback address: " + InetAddress.getLoopbackAddress());
-            System.out.println("Local address: " + InetAddress.getLocalHost());
-            System.out.println("External address: " + externalIp() + "\n");
-            System.out.println("\n[" + df.format(dateObj) + "] Server started on port: " + port + ", waiting for clients... \n");
+            ServerView.appendText("Loopback address: " + InetAddress.getLoopbackAddress());
+            ServerView.appendText("Local address: " + InetAddress.getLocalHost());
+            ServerView.appendText("External address: " + externalIp());
+            ServerView.appendText("\n[" + df.format(dateObj) + "] Server started on port: " + port + ", waiting for clients... \n");
 
             //While listening for new clients to join:
             while (true) {
@@ -132,8 +133,8 @@ public class Server implements Runnable {
 
             //Show the server who has connected:
             String host = x.getInetAddress().toString();
-            System.out.println(currentUsers.get(currentUsers.size() - 1)
-                    + " has connected from " + host.substring(1) + "\n");
+            ServerView.appendText(currentUsers.get(currentUsers.size() - 1)
+                    + " has connected from " + host.substring(1));
 
             //Sends out a message to every user except the client who just has connected (with a flag):
             for (int i = 0; i < connectionArray.size()-1; i++) {
@@ -202,10 +203,8 @@ public class Server implements Runnable {
             message = message.substring(11) + " - Time: " + (double)Math.round(answeredTime * 100d) / 100d + "sec - " +
                     "Points: " + scoreList.get(indexOfWinningUser);
 
-            System.out.println(message);
-
-            //Skip to 14sec. so that the next question starts in 1sec.
-            timeline.jumpTo(Duration.millis(14000));
+            //Skip to 19sec. so that the next question starts in 1sec.
+            timeline.jumpTo(Duration.millis(19000));
         }
 
         //loops through "winningstreaks"-list and shows how many times a user has won a match.
@@ -267,10 +266,10 @@ public class Server implements Runnable {
      * Starts timer.
      */
     public static void askQuestion(){
-        System.out.println("Question number: " + questionNumber+1);
+        ServerView.appendText("Question number: " + questionNumber);
         questionAnswered = false;
         sendBotMessage("QUESTION" + questionList.get(randomNumbers.get(questionNumber)));
-        System.out.println(questionList.get(randomNumbers.get(questionNumber)));
+        ServerView.appendText(questionList.get(randomNumbers.get(questionNumber)));
         answer = questionList.get(randomNumbers.get(questionNumber)+1);
 
         //Starts time-ticking:
@@ -279,7 +278,7 @@ public class Server implements Runnable {
 
     /**
      * Method that works as a timer for the questions. *****************************************************************
-     * If the boolean "questionsAnswered" is false, the bot will give the correct answer after 15sec.
+     * If the boolean "questionsAnswered" is false, the bot will give the correct answer after 20sec.
      * If the current question-number is lower than the amount of questions there is,
      * ask a new question and increase the value the current question-number.
      * Else if the questionnumber is going to set the arraylist of index out of bounce,
@@ -287,7 +286,7 @@ public class Server implements Runnable {
      */
     public static void timeTicker(){
         timeline = new Timeline(new KeyFrame(
-                Duration.millis(15000),
+                Duration.millis(20000),
                 ae -> {
                     if (!questionAnswered) {
                         sendBotMessage("Times up, the right answer was " + answer);
@@ -299,8 +298,6 @@ public class Server implements Runnable {
                     }
                     else{
                         int winnerIndex = scoreList.indexOf(Collections.max(scoreList));
-                        System.out.println(winnerIndex);
-
                         sendBotMessage("End of game. Winner with " + Collections.max(scoreList) + " points: " + currentUsers.get(winnerIndex));
                         winningStreaks.set(winnerIndex,winningStreaks.get(winnerIndex)+1);
                         quizIsOn = false;
@@ -356,6 +353,14 @@ public class Server implements Runnable {
      */
     public static boolean getQuizIsOn(){
         return quizIsOn;
+    }
+
+    public ObservableList<String> getCurrentUsers(){
+        return currentUsers;
+    }
+
+    public ArrayList<Integer> getWinningStreaks(){
+        return winningStreaks;
     }
 
 }
