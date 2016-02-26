@@ -2,10 +2,11 @@ package jServer;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.beans.*;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.util.Duration;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -203,8 +204,8 @@ public class Server implements Runnable {
             message = message.substring(11) + " - Time: " + (double)Math.round(answeredTime * 100d) / 100d + "sec - " +
                     "Points: " + scoreList.get(indexOfWinningUser);
 
-            //Skip to 19sec. so that the next question starts in 1sec.
-            timeline.jumpTo(Duration.millis(19000));
+            //Skip to 29sec. so that the next question starts in 1sec.
+            timeline.jumpTo(Duration.millis(29000));
         }
 
         //loops through "winningstreaks"-list and shows how many times a user has won a match.
@@ -216,6 +217,7 @@ public class Server implements Runnable {
 
         //Sends a bot-message to all clients:
         if (!message.startsWith("!getScores")) {
+            ServerView.appendText(message);
             try {
                 for (Socket tempSock : connectionArray) {
                     PrintWriter tempOut = new PrintWriter(tempSock.getOutputStream());
@@ -266,10 +268,10 @@ public class Server implements Runnable {
      * Starts timer.
      */
     public static void askQuestion(){
-        ServerView.appendText("Question number: " + questionNumber);
+        ServerView.appendText("Question number: " + (questionNumber+1));
         questionAnswered = false;
         sendBotMessage("QUESTION" + questionList.get(randomNumbers.get(questionNumber)));
-        ServerView.appendText(questionList.get(randomNumbers.get(questionNumber)));
+        //ServerView.appendText(questionList.get(randomNumbers.get(questionNumber)));
         answer = questionList.get(randomNumbers.get(questionNumber)+1);
 
         //Starts time-ticking:
@@ -278,7 +280,7 @@ public class Server implements Runnable {
 
     /**
      * Method that works as a timer for the questions. *****************************************************************
-     * If the boolean "questionsAnswered" is false, the bot will give the correct answer after 20sec.
+     * If the boolean "questionsAnswered" is false, the bot will give the correct answer after 30sec.
      * If the current question-number is lower than the amount of questions there is,
      * ask a new question and increase the value the current question-number.
      * Else if the questionnumber is going to set the arraylist of index out of bounce,
@@ -286,7 +288,7 @@ public class Server implements Runnable {
      */
     public static void timeTicker(){
         timeline = new Timeline(new KeyFrame(
-                Duration.millis(20000),
+                Duration.millis(30000),
                 ae -> {
                     if (!questionAnswered) {
                         sendBotMessage("Times up, the right answer was " + answer);
@@ -311,7 +313,24 @@ public class Server implements Runnable {
                 }));
 
         timeline.play(); //start timer.
+
+        //Listener for timer, sends a message when it's 10seconds left remaining:
+        timeline.currentTimeProperty().addListener(new InvalidationListener() {
+            @Override
+            public void invalidated(javafx.beans.Observable observable) {
+                int time = (int) timeline.getCurrentTime().toSeconds();
+                System.out.println(time);
+                //when it has been 20 seconds:
+                if (time == 20) {
+                    sendBotMessage("10sec remaining...");
+                    timeline.currentTimeProperty().removeListener(this); //stop listening.
+                }
+            }
+        });
+
+
     }
+
 
     /**
      * Method for generating only even randomNumbers (between 0 and amount of questions. *******************************
@@ -354,13 +373,4 @@ public class Server implements Runnable {
     public static boolean getQuizIsOn(){
         return quizIsOn;
     }
-
-    public ObservableList<String> getCurrentUsers(){
-        return currentUsers;
-    }
-
-    public ArrayList<Integer> getWinningStreaks(){
-        return winningStreaks;
-    }
-
 }
