@@ -2,12 +2,9 @@ package jClient;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ListView;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
@@ -16,26 +13,51 @@ import java.util.Optional;
 import java.util.Scanner;
 
 /**
+ * The model for the client with all the logic for the client-application.
+ * Connects and disconnects to server, receives and sends messages.
+ *
+ * Command-flags:
+ * /_DISCONNECT = A client has disconnected.
+ * /_BOT = Regular bot-message.
+ *  /_BOTQUESTION = question from bot.
+ *  /_BOTSTRGAME = bot tells client that game has started.
+ *  /_BOTENDGAME = bot tells clients that game has ended.
+ * !startQuiz = A client has started the quiz.
+ * RIGHTANSWER = A client has answered the question correctly.
+ */
+
+/**
  * Created by Jonas on 2016-02-17.
  */
 
 public class ClientModel implements Runnable{
 
+    //Variables for messaging (Socket, Scanner and PrintWriter):
     private Socket socket;
     private Scanner input;
     private PrintWriter output;
+    //String holding the username:
     private String userName;
+    //Boolean showing if client is connected or not:
     private boolean connected = false;
+    //ObservableList holding all online users:
     private ObservableList<String> userList = FXCollections.observableArrayList();
-    private ListView<String> userListView = new ListView<>(userList);
+    //String holding the current message:
     private String message;
+    //Reference to the interface messageInterface:
     private MessageInterface messageInterface;
 
+    /**
+     * Constructor for the ClientModel, gets a reference to the messageInterface via the constructor.
+     * @param messageInterface = reference to the interface "MessageInterface".
+     */
     public ClientModel(MessageInterface messageInterface) {
         this.messageInterface = messageInterface;
     }
 
-    //run-method for client(setting up input and output, start receiving messages:--------------------------------------
+    /**
+     * run-method for client(setting up the input, start receiving messages. *******************************************
+     */
     @Override
     public void run() {
         try
@@ -47,13 +69,13 @@ public class ClientModel implements Runnable{
                     host = host.substring(1);
                 }
 
+                //Shows what host you have connected to:
                 message = "You connected to host: " + host + "\n";
                 messageInterface.appendRegular();
 
+                //Set up input and start receiving messages:
                 input = new Scanner(socket.getInputStream());
-                output = new PrintWriter(socket.getOutputStream());
-                output.flush();
-                CheckStream();
+                checkStream();
             }
             finally
             {
@@ -66,7 +88,12 @@ public class ClientModel implements Runnable{
         }
     }
 
-    //Connect-method (port and host as imparameter, connection timeout on 3s)-------------------------------------------
+    /**
+     * Method for connecting to the server, connection timeout 3sec. Called from the ClientController-class.
+     * If the server doesn't respond, send a message to the client.
+     * @param port = port from the GUI-textfield.
+     * @param host = host from the GUI-textfield
+     */
     public void connect(int port, String host)
     {
         try
@@ -74,7 +101,7 @@ public class ClientModel implements Runnable{
             socket = new Socket();
             socket.connect(new InetSocketAddress(host, port), 3000);
 
-            //Sends the username to the server, sets connected-boolean to true:
+            //Set up the output, send the username to the server, set connected-boolean to true:
             output = new PrintWriter(socket.getOutputStream());
             output.println(userName);
             output.flush();
@@ -91,8 +118,9 @@ public class ClientModel implements Runnable{
         }
     }
 
-
-    //Disconnect-method-------------------------------------------------------------------------------------------------
+    /**
+     * Method for disconnecting. Called from the ClientController-class.
+     */
     public void disconnect() {
         try {
             //If connected - Check if client really wants to disconnect:
@@ -104,8 +132,7 @@ public class ClientModel implements Runnable{
 
                 Optional<ButtonType> result = alert.showAndWait();
                 if (result.get() == ButtonType.OK) {
-
-                    // /_DISCONNECT so the server knows its a disconnection:
+                    // /_DISCONNECT-flag so the server knows its a disconnection:
                     output.println("/_DISCONNECT" + userName + " has disconnected.");
                     output.flush();
                     socket.close();
@@ -126,8 +153,9 @@ public class ClientModel implements Runnable{
         }
     }
 
-
-    //Disconnect-method for shutdownhook, called from main-method:------------------------------------------------------
+    /**
+     * Shutdown-hook. This method is called from the ClientController-class just before the application closes.
+     */
     public void shutDownDisconnect(){
         try {
             output.println("/_DISCONNECT" + userName + " has disconnected.");
@@ -140,9 +168,10 @@ public class ClientModel implements Runnable{
         }
     }
 
-
-    //Method for while-looping the receive-method-----------------------------------------------------------------------
-    public void CheckStream()
+    /**
+     * Method for while-looping the receive-method. ********************************************************************
+     */
+    public void checkStream()
     {
         while(true)
         {
@@ -150,101 +179,92 @@ public class ClientModel implements Runnable{
         }
     }
 
-    //Receive message-method--------------------------------------------------------------------------------------------
+    /**
+     * Method for receiving messages.
+     * Uses different flags to control what is going to happend with the message that comes through. *******************
+     */
     public void receive (){
         try {
             if(input.hasNext())
             {
+                /*******************************************************************************************************
+                 *The receive-method will now do different things depending on what command comes through the stream
+                 ******************************************************************************************************/
 
-                /***********************************************************************************************************
-                 *The ClientModel will now do different things depending on what command comes through the stream
-                 **********************************************************************************************************/
-
+                //save the message to a variable:
                 message = input.nextLine();
-                int messageLength = message.length();
 
-                //This is a command that comes with a username:
+                //If a new client has connected, add the username to the listview:
                 if(message.startsWith("/_USERNAME")) {
 
-                    //Remove /_USERNAME and [], split with commas, fill array:
+                    //Remove /_USERNAME-flag and [], split with commas, fill the userlist:
                     String user = message.substring(11);
                     user = user.replace("[", "");
                     user = user.replace("]", "");
-
                     userList = FXCollections.observableArrayList(user.split(", "));
 
-                    //Send list to Listview (Online users): - Platform.runlater prevents thread-collision:
+                    //Send list to Listview by calling method in the messageInterface (Online users).
+                    //Platform.runlater prevents thread-collision:
                     Platform.runLater(() -> messageInterface.sendUserList());
                 }
 
-                //This is a command that tells if the username already exists:
+                //This is a command that tells if the chosen username already exists:
                 else if (message.startsWith("/_EXISTS")){
 
-                    Platform.runLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            //Send a message and change the username:
-                            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                            alert.setTitle("jQuiz");
-                            alert.setHeaderText(null);
-                            alert.setContentText("Username already exists, changing your username..");
-                            alert.showAndWait();
-                        }
+                    Platform.runLater(() -> {
+                        //Send a message and change the username:
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("jQuiz");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Username already exists, changing your username..");
+                        alert.showAndWait();
                     });
-
+                    //Sets the username to a new that the server has generated:
                     userName = message.substring(8);
+                    //Call the interface to change the username-textfield in the GUI-window.
+                    messageInterface.changeUserName();
                 }
 
-                //This is a command that tells if the server disconnects:
-                else if(message.startsWith("/_SERVERDISCONNECT")){
-                    disconnectedByServer();
-                }
+                //If a client has connected, append in green color:
                 else if(message.startsWith("/_CONNECT")){
                     message = message.substring(9);
                     messageInterface.appendGreen();
                 }
+                //If its a welcome-message from the server, append in blue:
+                else if(message.startsWith("Welcome")){
+                    messageInterface.appendBlue();
+                }
 
+                //These are flags for bot-messages:
                 else if(message.startsWith("/_BOT")){
 
+                    //If it is a question, append in bold organe:
                     if(message.startsWith("/_BOTQUESTION")){
                         message =  "[jQuiz] " + message.substring(13);
-                       // ClientView.appendOrangeBold("[jQuiz] " + message + "\n");
                         messageInterface.appendOrangeBold();
                     }
+                    //If the game ends or starts, append in blue:
+                    else if(message.startsWith("/_BOTENDGAME") || message.startsWith("/_BOTSTRGAME")){
+                        message = "[jQuiz] " + message.substring(12);
+                        messageInterface.appendBlue();
+                    }
+                    //If neither above, append in bold purple:
                     else {
                         message = "[jQuiz] " + message.substring(5);
-                        //ClientView.appendPurpleBold("[jQuiz] " + message + "\n");
                         messageInterface.appendPurpleBold();
                     }
                 }
 
-                else if(message.startsWith("Welcome")){
-                    //ClientView.appendBlue(message + "\n");
-                    messageInterface.appendBlue();
-                }
-
-
-
                 //It neither above, this is a usual message, send as it is:
                 else {
-    //                String user = message.substring(8, message.indexOf(" ", 8));
-    //                int userLength = user.length();
-
-                    //If it's a chatmessage:
+                    //If it's a chatmessage, append in regular text:
                     if (message.startsWith("[")) {
-
-                        //ClientView.appendRegular(message + "\n");
                         messageInterface.appendRegular();
-
-
                     }
-                    //If message is a "Client has disconnected"-message:
+
+                    //If message is a "Client has disconnected"-message, append in red:
                     else {
-
                         messageInterface.appendRed();
-
-
-
                     }
                 }
             }
@@ -253,9 +273,10 @@ public class ClientModel implements Runnable{
         }
     }
 
-
-
-    //Send message-method (Streams out message)-------------------------------------------------------------------------
+    /**
+     * Method for sending a message to other clients. Called from ClientController.
+     * @param message = the message from the GUI-window.
+     */
     public void send (String message) {
         if (message.equals("!startQuiz") || message.equals("!getScores")){
             output.println(message + userName);
@@ -266,57 +287,28 @@ public class ClientModel implements Runnable{
         output.flush();
     }
 
-    //What to do when client gets disconnected by server:---------------------------------------------------------------
-    private void disconnectedByServer(){
-
-        try {
-            socket.close();
-            connected = false;
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     //Set username:
     public void setUserName(String userName){
         this.userName = userName;
     }
 
-    //Get username:
+    //Get username, used with the MessageInterface in ClientController.
     public String getUserName(){
         return userName;
     }
 
-    //Get connected-boolean:
+    //Get "connected or not"-boolean:
     public boolean getConnected(){
         return connected;
     }
 
+    //Get the current message, used with the MessageInterface in ClientController.
     public String getMessage(){
         return message;
     }
 
+    //Get the "online users-list", used with the MessageInterface in ClientController.
     public ObservableList<String> getCurrentUsers(){
         return userList;
     }
-
-    //test:
-
-    void onChangedListener (ListChangeListener<String> changeListener){
-        System.out.println("hello?");
-        userList.addListener(changeListener);
-    }
-
-    public ListView<String> getUserListView(){
-        return userListView;
-    }
-
-    public Scanner getInput(){
-        return input;
-    }
-
-
-
-
 }

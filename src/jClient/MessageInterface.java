@@ -4,7 +4,7 @@ package jClient;
  * Interface for calling methods in the controller-class from the model-class without having a direct reference
  * to the controller-class from the model-class.
  *
- * These methods are implemented in the ClientController-class.
+ * These methods are implemented in the ClientController-class and then called from ClientModel.
  */
 
 /**
@@ -25,4 +25,6 @@ interface MessageInterface {
     void appendRegular();
 
     void sendUserList();
+
+    void changeUserName();
 }

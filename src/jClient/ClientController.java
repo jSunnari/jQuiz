@@ -5,6 +5,12 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 
 /**
+ * The controller for the client. - MainClass.
+ * Communicates between the GUI and the Model.
+ * Includes listeners and implements the interface "MessageInterface".
+ */
+
+/**
  * Created by Jonas on 2016-02-17.
  */
 
@@ -15,6 +21,10 @@ public class ClientController extends Application implements MessageInterface {
     @Override
     public void start(Stage primaryStage) throws Exception {
 
+        /**
+         * References to the view and the model, the view gets the primarystage in the constructor and the model gets
+         * "this" which in this case references to the interface "MessageInterface".
+         */
         view = new ClientView(primaryStage);
         model = new ClientModel(this);
 
@@ -25,7 +35,6 @@ public class ClientController extends Application implements MessageInterface {
          * If the connection goes well, the thread will start listening for messages and the GUI-window will initialize.
          */
         view.connectButtonListener(event -> {
-
             if (view.emptyFields()) {
 
                 model.setUserName(view.getUsername());
@@ -86,7 +95,7 @@ public class ClientController extends Application implements MessageInterface {
 
     /**
      * Main method with all the implemented methods from the interface MessageInterface.
-     * Appends the TextFlow in the viewclass with the the message-text from the modelclass.
+     * Appends the TextFlow in the viewclass (in different formats) with the the message-text from the modelclass.
      */
     public static void main(String[] args) {
         Application.launch(args);
@@ -125,5 +134,10 @@ public class ClientController extends Application implements MessageInterface {
     @Override
     public void sendUserList() {
         view.setUserList(model.getCurrentUsers());
+    }
+
+    @Override
+    public void changeUserName() {
+        view.setUserName(model.getUserName());
     }
 }

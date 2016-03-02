@@ -29,7 +29,6 @@ I vilket land ligger staden Antwerpen?,Belgien
 Vad används i tillverkningen av brännvinet Calvados?,Äpplen
 Vilken musikgrupp har gjort ledmotivet till TV-serien Vänner?,The Rembrandts
 Vad är motsatsen till versaler?,Gemener
-Vad kallas stjärnan på israels flagga?,Davidstjärnan
 I vilket land framställs spritdrycken Grappa?,Italien
 Vad hette Marge Simpson som ogift?,Bouvier
 Vilken nobelpristagare i litteratur skrev "Djungelboken" som kom 1894?,Rudyard Kipling
@@ -42,3 +41,6 @@ Vad heter Iron Maidens första studioalbum från år 1980?,Iron Maiden
 Vilken stad är huvudstad i Venezuela?,Caracas
 Vad heter huvudstaden i den amerikanska delstaten Texas?,Austin
 Vilken delstat är USAs sydligaste?,Hawaii
+Vad betyder remidjen på pitemål?,Bestick
+Vad har man för valuta i Finland?,Euro
+Vilken stad har sveriges äldsta universitet?,Uppsala

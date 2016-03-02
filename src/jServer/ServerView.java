@@ -66,6 +66,12 @@ public class ServerView {
      * @param message = incomming message from other classes.
      */
     public static void appendText(String message){
+        if (message.startsWith("STRGAME") || message.startsWith("ENDGAME")){
+            message = message.substring(7);
+        }
+        else if ( message.startsWith("QUESTION")){
+            message = message.substring(8);
+        }
         textArea.appendText(message + "\n");
     }
 

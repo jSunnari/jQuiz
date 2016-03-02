@@ -83,13 +83,17 @@ public class ClientView {
         connectButton.setMinWidth(80);
         ipTextfield.setMaxWidth(120);
         ipTextfield.setPromptText("127.0.0.1");
+        ipLabel.setStyle("-fx-text-fill: white;");
         portTextfield.setMaxWidth(60);
         portTextfield.setPromptText("50123");
+        portLabel.setStyle("-fx-text-fill: white;");
         usernameTextfield.setMaxWidth(120);
+        usernameLabel.setStyle("-fx-text-fill: white");
         spring1.setMinWidth(10);
         spring2.setMinWidth(55);
         chatTextLabel.setFont(Font.font(16));
-        userlistLabel.setFont(Font.font(16));
+        chatTextLabel.setStyle("-fx-text-fill: white; -fx-font-size: 16px;");
+        userlistLabel.setStyle("-fx-text-fill: white; -fx-font-size: 16px;");
 
         GridPane.setConstraints(usernameLabel,0,0);
         GridPane.setConstraints(usernameTextfield,1,0);
@@ -119,7 +123,7 @@ public class ClientView {
         chatTextBox.setAlignment(Pos.BOTTOM_CENTER);
 
         textFlowArea.setStyle("-fx-background-color: white; -fx-font-size: 14px;");
-        textContainer.setStyle("-fx-background-radius: 5px;");
+        textContainer.setStyle("-fx-background-radius: 5px; -fx-focus-color: transparent; ");
         textFlowArea.setPrefHeight(400);
         textFlowArea.setPrefWidth(560);
 
@@ -150,7 +154,7 @@ public class ClientView {
     }
 
     public void appendRed(String msg){
-        append(msg+"\n", "-fx-fill: red");
+        append(msg+"\n", "-fx-fill: rgba(213, 0, 14, 0.75)");
     }
 
     public void appendGreen(String msg){
@@ -158,7 +162,8 @@ public class ClientView {
     }
 
     public void appendBlue(String msg){
-        append(msg+"\n", "-fx-fill: blue");
+        append(msg+"\n", "-fx-fill: rgba(52, 47, 232, 0.76); -fx-font-weight: 700;");
+       // textFlowArea.setStyle("-fx-fill: rgba(52, 47, 232, 0.76)");
     }
 
     public void appendPurpleBold(String msg){
@@ -207,6 +212,10 @@ public class ClientView {
 
     public void setUserList(ObservableList currentUsers){
         userList.setItems(currentUsers);
+    }
+
+    public void setUserName (String userName){
+        usernameTextfield.setText(userName);
     }
 
     public void clearMessageTextArea(){

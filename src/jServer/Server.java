@@ -62,7 +62,7 @@ public class Server implements Runnable {
     private static ArrayList<String> questionList; //arraylist for all questions.
     private static ArrayList<Integer> randomNumbers = new ArrayList<>(); //arraylist holding randomnumbers.
     private static boolean questionAnswered; //boolean which knows if a questions is answered or not.
-    private static boolean quizIsOn; //boolean which know if the quiz is on or off.
+    private static boolean quizIsOn = false; //boolean which know if the quiz is on or off.
     private static int questionNumber = 0; //int for holding which the current question is.
 
     /**
@@ -95,6 +95,7 @@ public class Server implements Runnable {
         }
         catch (IOException e) {
             e.printStackTrace();
+            ServerView.appendText(e.toString());
         }
     }
 
@@ -151,6 +152,7 @@ public class Server implements Runnable {
             out.flush();
         } catch (IOException e) {
             e.printStackTrace();
+            ServerView.appendText(e.toString());
         }
     }
 
@@ -226,6 +228,7 @@ public class Server implements Runnable {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+                ServerView.appendText(e.toString());
             }
         }
     }
@@ -238,28 +241,29 @@ public class Server implements Runnable {
      * Starts asking questions.
      */
     public static void startQuiz(){
-        questionList = new ArrayList<>();
-        quizIsOn = true;
+        //You can only start one quiz at the time.
+            questionList = new ArrayList<>();
+            quizIsOn = true;
 
-        //Read file and fill arraylist:
-        try {
-            for (String line : Files.readAllLines(Paths.get("src/questions.txt"))) {
-                Collections.addAll(questionList, line.split(","));
+            //Read file and fill arraylist:
+            try {
+                for (String line : Files.readAllLines(Paths.get("src/questions.txt"))) {
+                    Collections.addAll(questionList, line.split(","));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                ServerView.appendText(e.toString());
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
-        //Fill the randomNumbers-arraylist with as many random numbers that there is questions. All unique numbers.
-        while (randomNumbers.size() < 10){
-            int rndNmr = rndNumber();
-            if (!randomNumbers.contains(rndNmr)) {
-                randomNumbers.add(rndNmr);
+            //Fill the randomNumbers-arraylist with as many random numbers that there is questions. All unique numbers.
+            while (randomNumbers.size() < 10) {
+                int rndNmr = rndNumber();
+                if (!randomNumbers.contains(rndNmr)) {
+                    randomNumbers.add(rndNmr);
+                }
             }
-        }
-
-        //Start asking questions:
-        askQuestion();
+            //Start asking questions:
+            askQuestion();
     }
 
     /**
@@ -270,7 +274,7 @@ public class Server implements Runnable {
     public static void askQuestion(){
         ServerView.appendText("Question number: " + (questionNumber+1));
         questionAnswered = false;
-        sendBotMessage("QUESTION" + questionList.get(randomNumbers.get(questionNumber)));
+        sendBotMessage("QUESTION" + (questionNumber+1) + ". " + questionList.get(randomNumbers.get(questionNumber)));
         //ServerView.appendText(questionList.get(randomNumbers.get(questionNumber)));
         answer = questionList.get(randomNumbers.get(questionNumber)+1);
 
@@ -300,7 +304,7 @@ public class Server implements Runnable {
                     }
                     else{
                         int winnerIndex = scoreList.indexOf(Collections.max(scoreList));
-                        sendBotMessage("End of game. Winner with " + Collections.max(scoreList) + " points: " + currentUsers.get(winnerIndex));
+                        sendBotMessage("ENDGAMEEnd of game. Winner with " + Collections.max(scoreList) + " points: " + currentUsers.get(winnerIndex));
                         winningStreaks.set(winnerIndex,winningStreaks.get(winnerIndex)+1);
                         quizIsOn = false;
                         questionNumber = 0;
@@ -319,7 +323,6 @@ public class Server implements Runnable {
             @Override
             public void invalidated(javafx.beans.Observable observable) {
                 int time = (int) timeline.getCurrentTime().toSeconds();
-                System.out.println(time);
                 //when it has been 20 seconds:
                 if (time == 20) {
                     sendBotMessage("10sec remaining...");
@@ -327,10 +330,7 @@ public class Server implements Runnable {
                 }
             }
         });
-
-
     }
-
 
     /**
      * Method for generating only even randomNumbers (between 0 and amount of questions. *******************************

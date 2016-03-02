@@ -12,6 +12,10 @@ import java.util.Scanner;
  *
  * Command-flags:
  * /_DISCONNECT = A client has disconnected.
+ * /_BOT = Regular bot-message.
+ *  /_BOTQUESTION = question from bot.
+ *  /_BOTSTRGAME = bot tells client that game has started.
+ *  /_BOTENDGAME = bot tells clients that game has ended.
  * !startQuiz = A client has started the quiz.
  * RIGHTANSWER = A client has answered the question correctly.
  */
@@ -59,8 +63,10 @@ public class ServerCommunication implements Runnable {
 
                 //If the client starts a quiz:
                 else if(message.startsWith("!startQuiz")){
-                    Server.sendBotMessage(message.substring(10) + " has started the quiz.");
-                    Server.startQuiz();
+                    if (!Server.getQuizIsOn()) {
+                        Server.sendBotMessage("STRGAME" + message.substring(10) + " has started the quiz.");
+                        Server.startQuiz();
+                    }
                 }
 
                 else if (message.startsWith("!getScores")){
