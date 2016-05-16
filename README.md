@@ -1,5 +1,5 @@
 # jQuiz
-School-assignment.
+School-assignment in JavaFX.
 
 A chat-application with a server-application and a client-application.
 The server works as a quiz-bot, sending out questions to all connected clients.
